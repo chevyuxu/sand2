@@ -44,14 +44,25 @@ npm run preview
 
 ## 部署到GitHub Pages
 
-1. 構建專案
-   ```bash
-   npm run build
-   ```
+1. 確保你的專案已經推送到GitHub倉庫的`main`分支
 
-2. 將`dist`目錄提交到GitHub倉庫的`gh-pages`分支
+2. 直接使用GitHub Actions自動部署（推薦方式）：
+   - 你的專案已經包含了部署配置文件 `.github/workflows/deploy.yml`
+   - 只要將程式碼推送到`main`分支，GitHub Actions就會自動執行部署
+   - 推送程式碼到GitHub：
+     ```bash
+     git add .
+     git commit -m "更新網站內容"
+     git push origin main
+     ```
 
-3. 在GitHub倉庫設置中啟用GitHub Pages，選擇`gh-pages`分支作為來源
+3. 等待部署完成：
+   - 在GitHub倉庫頁面點擊上方的"Actions"分頁
+   - 等待最新的工作流程完成（會顯示綠色勾勾）
+
+4. 查看部署結果：
+   - 到倉庫的"Settings" → "Pages"
+   - 你會看到網站已經發布在：`https://你的用戶名.github.io/倉庫名稱`
 
 ## 項目結構
 
