@@ -622,7 +622,7 @@ class DesertApp {
     // 加載小知識數據
     async loadDesertFacts() {
         try {
-            const response = await fetch('/data/desert-facts.json');
+            const response = await fetch('./data/desert-facts.json');
             const data = await response.json();
             this.desertFacts = data.facts;
         } catch (error) {
