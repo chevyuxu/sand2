@@ -15,7 +15,7 @@ jobs:
       - name: 設置Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: '20' # 更新到 Node.js 20 版本
           
       - name: 安裝依賴
         run: npm ci
