@@ -1,0 +1,20 @@
+{
+  "name": "desert-home-green-future",
+  "version": "1.0.0",
+  "description": "大漠之家公益互動網頁廣告",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["desert", "green", "interactive", "charity"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pixi.js": "^7.3.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+} 

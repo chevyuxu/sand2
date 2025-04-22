@@ -1,0 +1,30 @@
+name: 部署到GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v2
+
+      - name: 設置Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: 安裝依賴
+        run: npm ci
+        
+      - name: 構建
+        run: npm run build
+        
+      - name: 部署到GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages
+          folder: dist 
