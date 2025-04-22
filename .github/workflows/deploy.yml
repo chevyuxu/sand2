@@ -8,14 +8,16 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: 檢出代碼
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: 設置Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '20' # 更新到 Node.js 20 版本
+          node-version: '20'
           
       - name: 安裝依賴
         run: npm ci
@@ -24,7 +26,7 @@ jobs:
         run: npm run build
         
       - name: 部署到GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4.1.5
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
+          folder: dist
           branch: gh-pages
-          folder: dist 
