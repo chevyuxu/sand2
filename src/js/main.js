@@ -6,6 +6,7 @@ const SAND_PARTICLE_SIZE = 4; // 沙粒大小
 const SAND_PARTICLE_COUNT = 10000; // 沙粒數量
 const INTERACTION_RADIUS = 60; // 互動範圍半徑
 const TRANSITION_DURATION = 2000; // 場景轉換時間（毫秒）
+const QUESTION_THRESHOLD = 40; // 顯示問題的閾值（揭示百分比）
 
 // 主應用類
 class DesertApp {
@@ -29,6 +30,11 @@ class DesertApp {
         this.isDragging = false;
         this.lastPointerPosition = { x: 0, y: 0 };
         this.desertFacts = [];
+        this.desertQuestions = [];
+        this.currentQuestion = null;
+        this.questionAnswered = false;
+        this.questionShown = false;
+        this.interactionPaused = false;
 
         this.init();
     }
@@ -66,6 +72,9 @@ class DesertApp {
 
     // 加載資源
     loadResources() {
+        // 加載問題數據
+        this.loadQuestions();
+
         // 模擬圖片加載 (實際項目中應替換為真實的紋理)
         // 這裡我們臨時創建紋理，在實際項目中應從文件加載
         this.stages.forEach((stage, index) => {
@@ -106,6 +115,17 @@ class DesertApp {
             this.hideLoadingScreen();
             this.createSandParticles();
         }, 1500); // 模擬加載時間
+    }
+
+    // 加載問題數據
+    async loadQuestions() {
+        try {
+            const response = await fetch('./data/desert-questions.json');
+            const data = await response.json();
+            this.desertQuestions = data.questions;
+        } catch (error) {
+            console.error('Failed to load desert questions:', error);
+        }
     }
 
     // 初始化場景
@@ -201,6 +221,100 @@ class DesertApp {
         document.querySelector('.btn-info').addEventListener('click', () => {
             alert('瞭解更多關於大漠之家的防沙治沙工作');
         });
+
+        // 綁定問題模態框的繼續按鈕
+        document.querySelector('.continue-btn').addEventListener('click', () => {
+            this.hideQuestionModal();
+        });
+    }
+
+    // 顯示問題模態框
+    showQuestionModal() {
+        if (this.questionShown || this.desertQuestions.length === 0) return;
+
+        // 隨機選擇一個問題
+        const randomIndex = Math.floor(Math.random() * this.desertQuestions.length);
+        this.currentQuestion = this.desertQuestions[randomIndex];
+
+        // 設置問題文本
+        document.querySelector('.question-text').textContent = this.currentQuestion.question;
+
+        // 清空選項容器
+        const optionsContainer = document.querySelector('.options-container');
+        optionsContainer.innerHTML = '';
+
+        // 添加選項
+        this.currentQuestion.options.forEach((option, index) => {
+            const optionBtn = document.createElement('button');
+            optionBtn.className = 'option-btn';
+            optionBtn.textContent = option;
+            optionBtn.dataset.index = index;
+
+            optionBtn.addEventListener('click', (e) => {
+                this.handleOptionClick(parseInt(e.target.dataset.index));
+            });
+
+            optionsContainer.appendChild(optionBtn);
+        });
+
+        // 重置反饋文本和繼續按鈕
+        const feedbackText = document.querySelector('.feedback-text');
+        feedbackText.textContent = '';
+        feedbackText.className = 'feedback-text';
+
+        document.querySelector('.continue-btn').classList.remove('active');
+
+        // 顯示模態框
+        document.querySelector('.question-modal').classList.add('active');
+
+        // 標記問題已顯示
+        this.questionShown = true;
+        this.questionAnswered = false;
+        this.interactionPaused = true;
+    }
+
+    // 隱藏問題模態框
+    hideQuestionModal() {
+        document.querySelector('.question-modal').classList.remove('active');
+
+        // 如果問題已回答正確，允許繼續互動
+        if (this.questionAnswered) {
+            this.interactionPaused = false;
+        }
+    }
+
+    // 處理選項點擊
+    handleOptionClick(selectedIndex) {
+        // 如果已經回答過，不再處理
+        if (this.questionAnswered) return;
+
+        const isCorrect = selectedIndex === this.currentQuestion.correctAnswer;
+        const optionBtns = document.querySelectorAll('.option-btn');
+        const feedbackText = document.querySelector('.feedback-text');
+
+        // 標記所有選項
+        optionBtns.forEach((btn, index) => {
+            if (index === this.currentQuestion.correctAnswer) {
+                btn.classList.add('correct');
+            } else if (index === selectedIndex && !isCorrect) {
+                btn.classList.add('incorrect');
+            }
+        });
+
+        // 顯示反饋
+        if (isCorrect) {
+            feedbackText.textContent = `正確！${this.currentQuestion.explanation}`;
+            feedbackText.className = 'feedback-text correct';
+            this.questionAnswered = true;
+        } else {
+            feedbackText.textContent = '不正確，請再試一次！';
+            feedbackText.className = 'feedback-text incorrect';
+        }
+
+        // 如果回答正確，顯示繼續按鈕
+        if (isCorrect) {
+            document.querySelector('.continue-btn').classList.add('active');
+        }
     }
 
     // 隱藏加載畫面
@@ -258,6 +372,9 @@ class DesertApp {
 
     // 處理指針按下
     handlePointerDown(e) {
+        // 如果互動被暫停，不處理
+        if (this.interactionPaused) return;
+
         this.isDragging = true;
         this.lastPointerPosition.x = e.clientX;
         this.lastPointerPosition.y = e.clientY;
@@ -265,7 +382,8 @@ class DesertApp {
 
     // 處理指針移動
     handlePointerMove(e) {
-        if (!this.isDragging) return;
+        // 如果互動被暫停或未拖動，不處理
+        if (this.interactionPaused || !this.isDragging) return;
 
         const x = e.clientX;
         const y = e.clientY;
@@ -337,6 +455,11 @@ class DesertApp {
             // 樹苗階段 (40-60%)
             this.showStage(2);
             this.stageIndex = 2;
+
+            // 如果剛達到問題閾值且問題尚未顯示，顯示問題
+            if (this.revealed >= QUESTION_THRESHOLD && !this.questionShown) {
+                this.showQuestionModal();
+            }
         } else if (this.revealed >= 20) {
             // 乾裂土地階段 (20-40%)
             this.showStage(1);
