@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/sand2/', // 添加這行，設置基礎路徑為倉庫名
+  base: '/', // 從 /sand2/ (或任何其他非 / 的值) 修改為 /
   root: './',
   build: {
     outDir: 'dist',
