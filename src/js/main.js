@@ -35,6 +35,8 @@ class DesertApp {
         this.questionAnswered = false;
         this.questionShown = false;
         this.interactionPaused = false;
+        this.interactionStarted = false; // 跟踪用戶是否開始互動
+        this.swipeHintShown = false; // 跟踪滑動提示是否顯示
 
         this.init();
     }
@@ -114,7 +116,32 @@ class DesertApp {
             this.isLoaded = true;
             this.hideLoadingScreen();
             this.createSandParticles();
+            // 加載完成後顯示滑動提示
+            this.showSwipeHint();
         }, 1500); // 模擬加載時間
+    }
+
+    // 顯示滑動提示動畫
+    showSwipeHint() {
+        const swipeHint = document.querySelector('.swipe-hint');
+        if (swipeHint && !this.swipeHintShown) {
+            swipeHint.style.display = 'flex';
+            this.swipeHintShown = true;
+        }
+    }
+
+    // 隱藏滑動提示動畫
+    hideSwipeHint() {
+        if (this.swipeHintShown) {
+            const swipeHint = document.querySelector('.swipe-hint');
+            if (swipeHint) {
+                swipeHint.style.opacity = '0';
+                setTimeout(() => {
+                    swipeHint.style.display = 'none';
+                }, 500);
+                this.swipeHintShown = false;
+            }
+        }
     }
 
     // 加載問題數據
@@ -375,6 +402,12 @@ class DesertApp {
         // 如果互動被暫停，不處理
         if (this.interactionPaused) return;
 
+        // 如果是第一次互動，隱藏滑動提示
+        if (!this.interactionStarted) {
+            this.interactionStarted = true;
+            this.hideSwipeHint();
+        }
+
         this.isDragging = true;
         this.lastPointerPosition.x = e.clientX;
         this.lastPointerPosition.y = e.clientY;
@@ -384,6 +417,12 @@ class DesertApp {
     handlePointerMove(e) {
         // 如果互動被暫停或未拖動，不處理
         if (this.interactionPaused || !this.isDragging) return;
+
+        // 如果是第一次互動，隱藏滑動提示
+        if (!this.interactionStarted) {
+            this.interactionStarted = true;
+            this.hideSwipeHint();
+        }
 
         const x = e.clientX;
         const y = e.clientY;
